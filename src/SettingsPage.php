@@ -83,6 +83,14 @@ final class SettingsPage {
 			'wp_sentry_logger_connection'
 		);
 
+		add_settings_field(
+			'browser',
+			__( 'Browser errors (optional)', 'wp-sentry-logger' ),
+			[ $this, 'field_browser' ],
+			self::PAGE_SLUG,
+			'wp_sentry_logger_connection'
+		);
+
 		add_settings_section(
 			'wp_sentry_logger_noise',
 			__( 'Noise control', 'wp-sentry-logger' ),
@@ -198,6 +206,32 @@ final class SettingsPage {
 			?>
 		</p>
 		<?php
+	}
+
+	/**
+	 * Field: browser (JavaScript) capture toggle.
+	 */
+	public function field_browser(): void {
+		$settings = $this->settings();
+		$locked   = defined( 'WP_SENTRY_LOGGER_BROWSER' );
+		?>
+		<label>
+			<input
+				type="checkbox"
+				name="<?php echo esc_attr( WP_SENTRY_LOGGER_OPTION . '[browser]' ); ?>"
+				value="1"
+				<?php checked( (bool) $settings['browser'] ); ?>
+				<?php disabled( $locked ); ?>
+			/>
+			<?php esc_html_e( 'Capture uncaught JavaScript errors from visitor browsers, relayed through a first-party endpoint on this site (no CORS or ad-blocker issues). Optional — leave off if you host browser monitoring separately. Uses the same DSN.', 'wp-sentry-logger' ); ?>
+		</label>
+		<?php
+		if ( $locked ) {
+			printf(
+				'<p class="description">%s</p>',
+				esc_html__( 'Pinned by the WP_SENTRY_LOGGER_BROWSER constant in wp-config.php.', 'wp-sentry-logger' )
+			);
+		}
 	}
 
 	/**
@@ -362,6 +396,7 @@ final class SettingsPage {
 		}
 
 		$clean['send_default_pii'] = ! empty( $input['send_default_pii'] );
+		$clean['browser']          = ! empty( $input['browser'] );
 
 		return $clean;
 	}

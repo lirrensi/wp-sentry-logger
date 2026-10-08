@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:       WP Sentry Logger
- * Description:       Error monitoring for WordPress via the official Sentry PHP SDK — works with any Sentry-compatible backend. Severity presets, regex noise blocklist, and developer filters so real errors stand out from WordPress spam.
+ * Description:       Error monitoring for WordPress via the official Sentry PHP SDK — works with any Sentry-compatible backend. Severity presets, regex noise blocklist, developer filters, and optional browser (JavaScript) capture via a same-origin tunnel.
  * Version:           1.0.0
  * Requires at least: 6.4
  * Requires PHP:      8.2

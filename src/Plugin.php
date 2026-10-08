@@ -86,6 +86,10 @@ final class Plugin {
 		if ( class_exists( \WP_CLI::class ) ) {
 			Cli::register();
 		}
+
+		if ( $this->config->browser ) {
+			( new Browser( $this->config, $this->release() ) )->register();
+		}
 	}
 
 	/**

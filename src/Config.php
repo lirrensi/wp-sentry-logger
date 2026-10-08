@@ -77,6 +77,13 @@ final class Config {
 	public readonly bool $send_default_pii;
 
 	/**
+	 * Whether browser (JavaScript) errors are captured through the
+	 * first-party tunnel. Optional; off by default so sites can skip it and
+	 * host browser monitoring separately.
+	 */
+	public readonly bool $browser;
+
+	/**
 	 * Sentry environment label.
 	 */
 	public readonly string $environment;
@@ -98,6 +105,7 @@ final class Config {
 		$this->error_types      = (int) ( $this->constant_or_null( 'WP_SENTRY_LOGGER_ERROR_TYPES' ) ?? $this->level_mask( (string) $settings['level'], $settings['error_types'] ) );
 		$this->sample_rate      = (float) ( $this->constant_or_null( 'WP_SENTRY_LOGGER_SAMPLE_RATE' ) ?? $settings['sample_rate'] );
 		$this->send_default_pii = (bool) ( $this->constant_or_null( 'WP_SENTRY_LOGGER_SEND_DEFAULT_PII' ) ?? $settings['send_default_pii'] );
+		$this->browser          = (bool) ( $this->constant_or_null( 'WP_SENTRY_LOGGER_BROWSER' ) ?? $settings['browser'] );
 
 		$blocklist = $this->constant_or_null( 'WP_SENTRY_LOGGER_BLOCKLIST' ) ?? $settings['blocklist'];
 
@@ -139,6 +147,7 @@ final class Config {
 			'sample_rate'      => 1.0,
 			'blocklist'        => self::default_blocklist(),
 			'send_default_pii' => false,
+			'browser'          => false,
 			'environment'      => defined( 'WP_DEBUG' ) && WP_DEBUG ? 'development' : 'production',
 			'release'          => '',
 		];
@@ -254,6 +263,7 @@ final class Config {
 
 		$merged['sample_rate']      = max( 0.0, min( 1.0, (float) $merged['sample_rate'] ) );
 		$merged['send_default_pii'] = (bool) $merged['send_default_pii'];
+		$merged['browser']          = (bool) $merged['browser'];
 
 		return $merged;
 	}
