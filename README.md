@@ -29,7 +29,7 @@ not in this plugin.
 ## Requirements
 
 - WordPress 6.4+, PHP 8.2+
-- `composer install` inside the plugin directory produces `vendor/` (or build a distributable zip with `bin/build.sh`).
+- `composer install` inside the plugin directory produces `vendor/` (or use a [release zip](https://github.com/lirrensi/wp-sentry-logger/releases) — every release attaches the built, vendor-complete dist zip).
 
 ## Configuration
 
@@ -153,6 +153,20 @@ add_filter( 'wp_sentry_logger_browser_init', fn( $options ) => array_merge( $opt
 ## Uninstall
 
 Removes one option (`wp_sentry_logger_settings`) and nothing else.
+
+## Releasing
+
+One command, then hands off:
+
+```bash
+bash bin/release.sh 1.2.0
+```
+
+It bumps both version declarations, commits, tags `v1.2.0`, and pushes. GitHub Actions then verifies the tag matches the plugin version, builds the vendor-complete dist zip, and attaches it to the auto-generated GitHub Release — every release is immediately downloadable with zero follow-up.
+
+(The tag is pushed from the release script, not by CI: tags pushed with a workflow's `GITHUB_TOKEN` don't trigger workflows, and a tag that never fires the release workflow is an orphaned release waiting to happen.)
+
+One-time setup note: the token used to push must carry the `workflow` scope — GitHub requires it for any change under `.github/workflows/`.
 
 ## Credits
 
