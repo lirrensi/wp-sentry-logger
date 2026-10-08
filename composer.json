@@ -1,0 +1,20 @@
+{
+    "name": "kiber-int/wp-sentry-logger",
+    "description": "WordPress error monitoring plugin for any Sentry-compatible backend (official sentry/sentry SDK)",
+    "type": "wordpress-plugin",
+    "license": "MIT",
+    "require": {
+        "php": ">=8.2",
+        "sentry/sentry": "^4.14"
+    },
+    "config": {
+        "platform": {
+            "php": "8.3.6"
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "WPSentryLogger\\": "src/"
+        }
+    }
+}
