@@ -57,7 +57,89 @@ All settings also support a wp-config.php constant override:
 
 - **Too much noise?** Add one case-insensitive regex per offending pattern to the blocklist. It is matched anywhere in the error message, exception text, or stack-trace paths — e.g. `SomePluginName` or `wp-content/plugins/foo/`. Invalid lines are flagged when you save.
 - **Missing errors you care about?** Widen the severity: pick *Everything*, or set a raw numeric mask (the field placeholder shows the number for "everything except notices and deprecations"). Capture starts the moment the plugin boots, so load-time fatals are included.
-- **Browser events** are relayed verbatim (size-capped and rate-limited) and skip the regex blocklist — filter them browser-side via the `wp_sentry_logger_browser_init` filter if needed.
+- **Browser events** are relayed verbatim — they skip the regex blocklist and have their own filtering (see *Browser (JavaScript) coverage* below).
+
+## Browser (JavaScript) coverage
+
+Optional, off by default. When enabled, the plugin drops the official Sentry Browser SDK into the front end and relays page errors through a first-party tunnel on your own site — the browser never talks to the tracker directly.
+
+### How it works
+
+```
+visitor browser                   your WordPress site                       your tracker
+───────────────                   ───────────────────                       ────────────
+Sentry Browser SDK   ── POST ──►  /wp-json/wp-sentry-logger/v1/tunnel  ──►  /api/<project>/envelope/
+bundled locally,                  size cap · per-IP rate limit
+same-origin, no CDN               DSN allowlist (yours only)
+```
+
+- The SDK is served **from the plugin itself** (`assets/sentry-browser.min.js`, the official **Browser SDK 11.5.0** build, SHA-384 verified) — no third-party request for ad-blockers to pattern-match, no extra CSP origins.
+- `Sentry.init` runs right after the bundle with the same DSN, environment and release as the PHP client, so browser and server errors land in one tracker project — separate them with `platform:javascript` / `platform:php` in searches.
+- The bootstrap posts to a relative URL, so plain and pretty permalinks both work.
+- The tunnel endpoint is a courier, not a processor: raw envelopes in, raw envelopes out to the ingest URL of *your configured DSN*. Nothing else is accepted.
+
+| Guard | Value | Response when violated |
+|---|---|---|
+| payload size | 1 MiB | `413` |
+| requests per IP | 60 / minute | `429` |
+| envelope `dsn` differs from the configured DSN | — | `403` |
+| malformed envelope | — | `400` |
+
+### Enabling it
+
+- Settings → WP Sentry Logger → *Browser errors (optional)*, or
+- `define( 'WP_SENTRY_LOGGER_BROWSER', true );` in `wp-config.php` — one line in the deploy template for a whole fleet.
+
+Off means off: no script, no endpoint, no hooks. Sites that host browser monitoring separately (another plugin, a tag manager, a hand-rolled snippet) remain untouched.
+
+### What gets captured automatically
+
+Uncaught JavaScript errors and unhandled promise rejections on front-end pages, with breadcrumbs from init onward. No performance tracing, no session replay, no session tracking — error capture only.
+
+### Filtering browser events
+
+Browser events are relayed verbatim, so the PHP-side severity preset and regex blocklist do **not** apply to them. Filter with the Browser SDK's own options via the `wp_sentry_logger_browser_init` filter:
+
+```php
+add_filter( 'wp_sentry_logger_browser_init', function ( array $options ): array {
+	$options['ignoreErrors'] = [ 'SomePluginName', 'fb_xd_fragment' ]; // matched as substrings
+	$options['denyUrls']     = [ '/wp-content/plugins/noisy-thing/' ];
+	$options['sampleRate']   = 0.5;              // send half of all browser events
+	$options['allowUrls']    = [ 'example.com' ]; // if set, everything else is dropped
+
+	return $options;
+} );
+```
+
+Any JSON-serialisable [`Sentry.init` option](https://docs.sentry.io/platforms/javascript/configuration/options/) can be set this way. String patterns match as substrings; JavaScript functions (`beforeSend`, `beforeBreadcrumb`) and `RegExp` objects cannot cross the PHP→JSON boundary — if you need those, leave browser coverage off and wire the SDK yourself instead. The SDK already ignores the classics by default (`Script error.`, `ResizeObserver loop…`, `googletag`); `ignoreErrors` entries add to that list.
+
+### Sending your own events
+
+The SDK is on the page under its usual `Sentry` global — theme/plugin JavaScript can report anything:
+
+```js
+if ( window.Sentry ) {
+	Sentry.captureException( new Error( 'Checkout retry failed' ) );
+	Sentry.captureMessage( 'Payment provider returned an unexpected status' );
+
+	Sentry.withScope( function ( scope ) {
+		scope.setTag( 'cart_items', String( cart.count ) );
+		Sentry.captureException( err );
+	} );
+}
+```
+
+From PHP, attach inline JS to the `wp-sentry-logger-browser` script handle so ordering is guaranteed (it prints only while browser coverage is on):
+
+```php
+add_action( 'wp_enqueue_scripts', function (): void {
+	wp_add_inline_script(
+		'wp-sentry-logger-browser',
+		"Sentry.captureMessage( 'Deploy marker: theme v4.2' );",
+		'after'
+	);
+}, 20 );
+```
 
 ## Dev filters quick reference
 
@@ -65,7 +147,7 @@ All settings also support a wp-config.php constant override:
 add_filter( 'wp_sentry_logger_blocklist_pattern', fn( $line ) => str_starts_with( $line, 'HTTP_USER_AGENT' ) ? null : $line );
 add_filter( 'wp_sentry_logger_error_types', fn( $mask ) => $mask | E_USER_WARNING );
 add_filter( 'wp_sentry_logger_event', fn( $event, $hint ) => $event ); // return null to drop
-add_filter( 'wp_sentry_logger_browser_init', fn( $options ) => array_merge( $options, [ 'ignoreErrors' => [ '/SomePluginName/' ] ] ) );
+add_filter( 'wp_sentry_logger_browser_init', fn( $options ) => array_merge( $options, [ 'ignoreErrors' => [ 'SomePluginName' ] ] ) );
 ```
 
 ## Uninstall

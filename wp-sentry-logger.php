@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       WP Sentry Logger
  * Description:       Error monitoring for WordPress via the official Sentry PHP SDK — works with any Sentry-compatible backend. Severity presets, regex noise blocklist, developer filters, and optional browser (JavaScript) capture via a same-origin tunnel.
- * Version:           1.0.0
+ * Version:           1.1.0
  * Requires at least: 6.4
  * Requires PHP:      8.2
  * Author:            Kiber Integration
@@ -24,7 +24,7 @@ namespace WPSentryLogger {
 
 	defined( 'ABSPATH' ) || exit;
 
-	const WP_SENTRY_LOGGER_VERSION     = '1.0.0';
+	const WP_SENTRY_LOGGER_VERSION     = '1.1.0';
 	const WP_SENTRY_LOGGER_OPTION      = 'wp_sentry_logger_settings';
 	const WP_SENTRY_LOGGER_MIN_PHP     = '8.2';
 	const WP_SENTRY_LOGGER_PLUGIN_FILE = __FILE__;
