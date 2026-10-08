@@ -158,9 +158,20 @@ final class EventFilter {
 	 * @return non-empty-string|null Null when the line is not a valid regex.
 	 */
 	private function compile( string $pattern ): ?string {
-		$regex = str_starts_with( $pattern, '/' )
-			? $pattern
-			: '/' . str_replace( '/', '\/', $pattern ) . '/i';
+		if ( str_starts_with( $pattern, '/' ) ) {
+			// Raw regex escape hatch. Keep it case-insensitive like the
+			// simple form unless the line carries its own flags.
+			$closing = strrpos( $pattern, '/' );
+			$flags   = false !== $closing ? substr( $pattern, $closing + 1 ) : '';
+
+			if ( false !== $closing && $closing > 0 && '' === preg_replace( '/[a-zA-Z]/', '', $flags ) && ! str_contains( $flags, 'i' ) ) {
+				$pattern = substr( $pattern, 0, $closing + 1 ) . $flags . 'i';
+			}
+
+			$regex = $pattern;
+		} else {
+			$regex = '/' . str_replace( '/', '\/', $pattern ) . '/i';
+		}
 
 		// preg_match() on an empty subject both validates the pattern and
 		// emits a PHP warning for invalid ones; the warning is silenced

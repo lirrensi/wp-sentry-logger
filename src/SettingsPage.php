@@ -29,7 +29,6 @@ use function sanitize_textarea_field;
 use function sprintf;
 use function submit_button;
 use function wp_nonce_url;
-use const wp_sentry_logger;
 
 /**
  * Renders and persists the plugin settings.
@@ -193,12 +192,12 @@ final class SettingsPage {
 			type="text"
 			class="regular-text code"
 			name="<?php echo esc_attr( WP_SENTRY_LOGGER_OPTION . '[dsn]' ); ?>"
-			value="<?php echo esc_attr( $locked ? '' : (string) $settings['dsn'] ); ?>"
+			value="<?php echo esc_attr( $locked ? '' : Config::enforce_https_dsn( (string) $settings['dsn'] ) ); ?>"
 			placeholder="https://<key>@errors.example.com/<project-id>"
 			<?php disabled( $locked ); ?>
 		/>
 		<p class="description">
-			<?php esc_html_e( 'Project DSN from your Sentry-compatible backend. Empty = plugin dormant.', 'wp-sentry-logger' ); ?>
+			<?php esc_html_e( 'Project DSN from your Sentry-compatible backend. Saved as https:// (plain http:// is upgraded automatically). Empty = plugin dormant.', 'wp-sentry-logger' ); ?>
 			<?php
 			if ( $locked ) {
 				esc_html_e( ' Pinned by the WP_SENTRY_LOGGER_DSN constant in wp-config.php.', 'wp-sentry-logger' );
@@ -339,19 +338,30 @@ final class SettingsPage {
 	 */
 	public function sanitize( $input ): array {
 		$input = is_array( $input ) ? $input : [];
-		$clean = Config::defaults();
 
-		if ( isset( $input['dsn'] ) && is_string( $input['dsn'] ) && '' !== trim( $input['dsn'] ) ) {
-			try {
-				Dsn::createFromString( trim( $input['dsn'] ) );
-				$clean['dsn'] = trim( $input['dsn'] );
-			} catch ( \Throwable $e ) {
-				add_settings_error(
-					WP_SENTRY_LOGGER_OPTION,
-					'wp_sentry_logger_dsn',
-					__( 'Invalid DSN — the plugin stays dormant until it is fixed.', 'wp-sentry-logger' )
-				);
+		// Start from the stored option, not bare defaults, so fields without
+		// a UI control (release, environment, sample_rate) and
+		// constant-pinned fields (disabled → not submitted) are never wiped
+		// by a form save.
+		$clean = array_merge( Config::defaults(), (array) get_option( WP_SENTRY_LOGGER_OPTION, [] ) );
+
+		if ( isset( $input['dsn'] ) && is_string( $input['dsn'] ) ) {
+			$dsn = trim( $input['dsn'] );
+
+			if ( '' === $dsn ) {
 				$clean['dsn'] = '';
+			} else {
+				try {
+					Dsn::createFromString( $dsn );
+					$clean['dsn'] = Config::enforce_https_dsn( $dsn );
+				} catch ( \Throwable $e ) {
+					add_settings_error(
+						WP_SENTRY_LOGGER_OPTION,
+						'wp_sentry_logger_dsn',
+						__( 'Invalid DSN — the plugin stays dormant until it is fixed.', 'wp-sentry-logger' )
+					);
+					$clean['dsn'] = '';
+				}
 			}
 		}
 
@@ -359,9 +369,13 @@ final class SettingsPage {
 			$clean['level'] = LevelPreset::tryFrom( $input['level'] )?->value ?? $clean['level'];
 		}
 
-		if ( isset( $input['error_types'] ) && '' !== $input['error_types'] ) {
-			if ( is_numeric( $input['error_types'] ) ) {
-				$clean['error_types'] = (int) $input['error_types'];
+		if ( isset( $input['error_types'] ) ) {
+			$raw_mask = $input['error_types'];
+
+			if ( is_scalar( $raw_mask ) && '' === trim( (string) $raw_mask ) ) {
+				$clean['error_types'] = null;
+			} elseif ( is_scalar( $raw_mask ) && is_numeric( $raw_mask ) ) {
+				$clean['error_types'] = (int) $raw_mask;
 			} else {
 				add_settings_error(
 					WP_SENTRY_LOGGER_OPTION,
@@ -395,8 +409,15 @@ final class SettingsPage {
 			}
 		}
 
-		$clean['send_default_pii'] = ! empty( $input['send_default_pii'] );
-		$clean['browser']          = ! empty( $input['browser'] );
+		// Disabled (constant-pinned) checkboxes are not submitted; keep the
+		// stored value then, so un-pinning later does not silently flip them.
+		if ( ! defined( 'WP_SENTRY_LOGGER_SEND_DEFAULT_PII' ) ) {
+			$clean['send_default_pii'] = ! empty( $input['send_default_pii'] );
+		}
+
+		if ( ! defined( 'WP_SENTRY_LOGGER_BROWSER' ) ) {
+			$clean['browser'] = ! empty( $input['browser'] );
+		}
 
 		return $clean;
 	}

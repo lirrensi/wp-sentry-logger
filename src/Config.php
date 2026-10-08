@@ -230,9 +230,10 @@ final class Config {
 	 * redirects (curl without FOLLOWLOCATION), so a plain-http DSN behind an
 	 * HTTPS terminator would silently lose every event while the transport
 	 * still reports success. Many backends hand out http:// DSNs, hence this
-	 * guard rather than a docs fix.
+	 * guard rather than a docs fix. Public: the settings save path reuses it
+	 * to normalise the stored DSN.
 	 */
-	private static function enforce_https_dsn( string $dsn ): string {
+	public static function enforce_https_dsn( string $dsn ): string {
 		if ( '' === $dsn || self::dsn_scheme( $dsn ) !== 'http' ) {
 			return $dsn;
 		}

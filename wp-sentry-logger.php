@@ -30,13 +30,37 @@ namespace WPSentryLogger {
 	const WP_SENTRY_LOGGER_PLUGIN_FILE = __FILE__;
 
 	/**
+	 * Register the composer autoloader when the Sentry SDK is not loaded
+	 * yet. Needed by both callers below: the activation hook fires before
+	 * `plugins_loaded`, so it cannot rely on the boot callback having run.
+	 *
+	 * @return bool Whether the Sentry SDK is available.
+	 */
+	function load_vendor(): bool {
+		if ( ! class_exists( \Sentry\SentrySdk::class ) ) {
+			$vendor_autoload = dirname( WP_SENTRY_LOGGER_PLUGIN_FILE ) . '/vendor/autoload.php';
+
+			if ( file_exists( $vendor_autoload ) ) {
+				require_once $vendor_autoload;
+			}
+		}
+
+		return class_exists( \Sentry\SentrySdk::class );
+	}
+
+	/**
 	 * Activation: seed settings with sane defaults (no DSN yet — the plugin
 	 * stays dormant until one is configured, so activating can never
-	 * error-spam a third-party service from day one).
+	 * error-spam a third-party service from day one). Stays silent when
+	 * vendor/ is missing: defaults are merged at runtime anyway.
 	 */
 	register_activation_hook(
 		WP_SENTRY_LOGGER_PLUGIN_FILE,
 		static function (): void {
+			if ( ! load_vendor() ) {
+				return;
+			}
+
 			if ( ! get_option( WP_SENTRY_LOGGER_OPTION ) ) {
 				add_option( WP_SENTRY_LOGGER_OPTION, Config::defaults() );
 			}
@@ -64,18 +88,7 @@ namespace WPSentryLogger {
 				return; // Already booted by an earlier call (defensive).
 			}
 
-			if ( ! class_exists( \Sentry\SentrySdk::class ) ) {
-				// Distribution builds ship a composer-generated
-				// vendor/ directory; a source checkout that skipped
-				// `composer install` lands here. Handle that gracefully.
-				$vendor_autoload = dirname( WP_SENTRY_LOGGER_PLUGIN_FILE ) . '/vendor/autoload.php';
-
-				if ( file_exists( $vendor_autoload ) ) {
-					require_once $vendor_autoload;
-				}
-			}
-
-			if ( ! class_exists( \Sentry\SentrySdk::class ) ) {
+			if ( ! load_vendor() ) {
 				add_action(
 					'admin_notices',
 					static function (): void {
