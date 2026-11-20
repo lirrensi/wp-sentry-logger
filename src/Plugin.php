@@ -63,8 +63,16 @@ final class Plugin {
 		add_action( 'plugins_loaded', [ $this, 'enrich_scope' ], 7 );
 
 		if ( is_admin() ) {
-			$settings = new SettingsPage( $this );
-			$settings->register();
+			// Not `plugins_loaded`: is_admin() is also true on admin-ajax.php,
+			// where the Settings API is not loaded yet. admin_init runs after
+			// wp-admin/includes/admin.php, so every add_settings_* function
+			// exists by then.
+			add_action(
+				'admin_init',
+				function (): void {
+					( new SettingsPage( $this ) )->register();
+				}
+			);
 		}
 
 		add_filter(

@@ -23,7 +23,9 @@ use function esc_html__;
 use function esc_html_e;
 use function esc_textarea;
 use function esc_url;
+use function function_exists;
 use function get_option;
+use function is_admin;
 use function register_setting;
 use function sanitize_textarea_field;
 use function sprintf;
@@ -49,6 +51,13 @@ final class SettingsPage {
 	 * Register the page, its fields and the test-event action.
 	 */
 	public function register(): void {
+		// Belt for the guard in Plugin::register(): never fatal on a request
+		// where the Settings API was not loaded (e.g. a stray admin-ajax call
+		// under a different hook order).
+		if ( ! is_admin() || ! function_exists( 'add_settings_section' ) ) {
+			return;
+		}
+
 		add_options_page(
 			__( 'WP Sentry Logger', 'wp-sentry-logger' ),
 			__( 'WP Sentry Logger', 'wp-sentry-logger' ),
