@@ -35,7 +35,12 @@ git pull --ff-only
 php bin/bump-version.php "$version"
 
 git add error-logger-for-sentry.php readme.txt
-git commit -m "Release v$version"
+
+# Tag the current commit when the version was already bumped manually.
+if ! git diff --cached --quiet; then
+	git commit -m "Release v$version"
+fi
+
 git tag -a "v$version" -m "Error Logger for Sentry $version"
 git push
 git push origin "v$version"
