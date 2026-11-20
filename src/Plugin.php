@@ -21,8 +21,10 @@ use function is_multisite;
 use function is_user_logged_in;
 use function plugin_basename;
 use function sprintf;
+use function wp_add_privacy_policy_content;
 use function wp_get_environment_type;
 use function wp_get_current_user;
+use function wp_kses_post;
 
 /**
  * Core plugin service.
@@ -71,6 +73,7 @@ final class Plugin {
 				'admin_init',
 				function (): void {
 					( new SettingsPage( $this ) )->register();
+					$this->add_privacy_policy_content();
 				}
 			);
 		}
@@ -82,8 +85,8 @@ final class Plugin {
 					$links,
 					sprintf(
 						'<a href="%s">%s</a>',
-						esc_url( admin_url( 'options-general.php?page=wp-sentry-logger' ) ),
-						esc_html__( 'Settings', 'wp-sentry-logger' )
+						esc_url( admin_url( 'options-general.php?page=error-logger-for-sentry' ) ),
+						esc_html__( 'Settings', 'error-logger-for-sentry' )
 					)
 				);
 
@@ -98,6 +101,29 @@ final class Plugin {
 		if ( $this->config->browser ) {
 			( new Browser( $this->config, $this->release() ) )->register();
 		}
+	}
+
+	/**
+	 * Add the plugin's data-processing summary to the WordPress privacy
+	 * policy helper (Tools -> Privacy -> Policy guide).
+	 */
+	public function add_privacy_policy_content(): void {
+		if ( ! function_exists( 'wp_add_privacy_policy_content' ) ) {
+			return;
+		}
+
+		$content = sprintf(
+			'<p>%1$s</p><p>%2$s <a href="%3$s">%4$s</a> %5$s <a href="%6$s">%7$s</a>.</p>',
+			esc_html__( 'Error Logger for Sentry sends error events to the Sentry-compatible backend configured by a site administrator. Events can include the error message, stack trace, file paths, the request URL without its query string, request headers, WordPress and theme versions, and a logged-in user\'s numeric ID and role. Email addresses, display names, IP addresses, request bodies, cookies, and query strings are excluded by default. Browser error capture is optional and off by default.', 'error-logger-for-sentry' ),
+			esc_html__( 'When Sentry.io is used, data is processed under its', 'error-logger-for-sentry' ),
+			esc_url( 'https://sentry.io/terms/' ),
+			esc_html__( 'Terms of Service', 'error-logger-for-sentry' ),
+			esc_html__( 'and', 'error-logger-for-sentry' ),
+			esc_url( 'https://sentry.io/privacy/' ),
+			esc_html__( 'Privacy Policy', 'error-logger-for-sentry' )
+		);
+
+		wp_add_privacy_policy_content( 'Error Logger for Sentry', wp_kses_post( $content ) );
 	}
 
 	/**
@@ -195,7 +221,7 @@ final class Plugin {
 		$this->init_sdk();
 
 		$event_id = SentrySdk::getCurrentHub()->captureException(
-			new \RuntimeException( 'WP Sentry Logger test event' )
+			new \RuntimeException( 'Error Logger for Sentry test event' )
 		);
 
 		return ( $event_id !== null ) ? (string) $event_id : '';

@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name:       WP Sentry Logger
+ * Plugin Name:       Error Logger for Sentry
  * Description:       Error monitoring for WordPress via the official Sentry PHP SDK — works with any Sentry-compatible backend. Severity presets, regex noise blocklist, developer filters, and optional browser (JavaScript) capture via a same-origin tunnel.
- * Version:           1.1.0
+ * Version:           1.1.1
  * Requires at least: 6.4
  * Requires PHP:      8.2
  * Author:            lirrensi
@@ -10,7 +10,7 @@
  * Plugin URI:        https://github.com/lirrensi/wp-sentry-logger
  * License:           MIT
  * License URI:       https://opensource.org/license/mit
- * Text Domain:       wp-sentry-logger
+ * Text Domain:       error-logger-for-sentry
  *
  * Forked from https://github.com/CodingIT-dev/wp-sentry, itself based on
  * https://github.com/stayallive/wp-sentry, and modernized for PHP 8.2+,
@@ -26,7 +26,7 @@ namespace WPSentryLogger {
 
 	defined( 'ABSPATH' ) || exit;
 
-	const WP_SENTRY_LOGGER_VERSION     = '1.1.0';
+	const WP_SENTRY_LOGGER_VERSION     = '1.1.1';
 	const WP_SENTRY_LOGGER_OPTION      = 'wp_sentry_logger_settings';
 	const WP_SENTRY_LOGGER_MIN_PHP     = '8.2';
 	const WP_SENTRY_LOGGER_PLUGIN_FILE = __FILE__;
@@ -99,7 +99,7 @@ namespace WPSentryLogger {
 						}
 						printf(
 							'<div class="notice notice-error"><p>%s</p></div>',
-							esc_html__( 'WP Sentry Logger: the vendor/ directory is missing — run "composer install" inside the plugin directory and reload.', 'wp-sentry-logger' )
+							esc_html__( 'Error Logger for Sentry: the vendor/ directory is missing — run "composer install" inside the plugin directory and reload.', 'error-logger-for-sentry' )
 						);
 					}
 				);

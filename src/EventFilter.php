@@ -17,6 +17,7 @@ namespace WPSentryLogger;
 use Sentry\Event;
 use Sentry\EventHint;
 use Sentry\EventType;
+use function wp_parse_url;
 
 /**
  * Applies the configured blocklist to outgoing events.
@@ -129,7 +130,7 @@ final class EventFilter {
 		$request = $event->getRequest();
 
 		if ( isset( $request['url'] ) && is_string( $request['url'] ) && '' !== $request['url'] ) {
-			$parsed = parse_url( $request['url'] );
+			$parsed = wp_parse_url( $request['url'] );
 
 			if ( isset( $parsed['scheme'], $parsed['host'] ) ) {
 				$request['url'] = $parsed['scheme'] . '://' . $parsed['host'] . ( $parsed['path'] ?? '' );

@@ -39,7 +39,7 @@ final class SettingsPage {
 	/**
 	 * Page slug used in the URL and the settings group name.
 	 */
-	public const PAGE_SLUG = 'wp-sentry-logger';
+	public const PAGE_SLUG = 'error-logger-for-sentry';
 
 	private Plugin $plugin;
 
@@ -59,8 +59,8 @@ final class SettingsPage {
 		}
 
 		add_options_page(
-			__( 'WP Sentry Logger', 'wp-sentry-logger' ),
-			__( 'WP Sentry Logger', 'wp-sentry-logger' ),
+			__( 'Error Logger for Sentry', 'error-logger-for-sentry' ),
+			__( 'Error Logger for Sentry', 'error-logger-for-sentry' ),
 			'manage_options',
 			self::PAGE_SLUG,
 			[ $this, 'render' ]
@@ -78,14 +78,14 @@ final class SettingsPage {
 
 		add_settings_section(
 			'wp_sentry_logger_connection',
-			__( 'Connection', 'wp-sentry-logger' ),
+			__( 'Connection', 'error-logger-for-sentry' ),
 			'__return_false',
 			self::PAGE_SLUG
 		);
 
 		add_settings_field(
 			'dsn',
-			__( 'DSN', 'wp-sentry-logger' ),
+			__( 'DSN', 'error-logger-for-sentry' ),
 			[ $this, 'field_dsn' ],
 			self::PAGE_SLUG,
 			'wp_sentry_logger_connection'
@@ -93,7 +93,7 @@ final class SettingsPage {
 
 		add_settings_field(
 			'browser',
-			__( 'Browser errors (optional)', 'wp-sentry-logger' ),
+			__( 'Browser errors (optional)', 'error-logger-for-sentry' ),
 			[ $this, 'field_browser' ],
 			self::PAGE_SLUG,
 			'wp_sentry_logger_connection'
@@ -101,11 +101,11 @@ final class SettingsPage {
 
 		add_settings_section(
 			'wp_sentry_logger_noise',
-			__( 'Noise control', 'wp-sentry-logger' ),
+			__( 'Noise control', 'error-logger-for-sentry' ),
 			static function (): void {
 				printf(
 					'<p class="description">%s</p>',
-					esc_html__( 'WordPress sites produce a steady stream of warnings that are not real errors. Pick a severity level and add regex lines for anything that is still spam in your setup — matching events are dropped on the server, before any traffic is sent.', 'wp-sentry-logger' )
+					esc_html__( 'WordPress sites produce a steady stream of warnings that are not real errors. Pick a severity level and add regex lines for anything that is still spam in your setup — matching events are dropped on the server, before any traffic is sent.', 'error-logger-for-sentry' )
 				);
 			},
 			self::PAGE_SLUG
@@ -113,7 +113,7 @@ final class SettingsPage {
 
 		add_settings_field(
 			'level',
-			__( 'Severity level', 'wp-sentry-logger' ),
+			__( 'Severity level', 'error-logger-for-sentry' ),
 			[ $this, 'field_level' ],
 			self::PAGE_SLUG,
 			'wp_sentry_logger_noise'
@@ -121,7 +121,7 @@ final class SettingsPage {
 
 		add_settings_field(
 			'blocklist',
-			__( 'Regex blocklist', 'wp-sentry-logger' ),
+			__( 'Regex blocklist', 'error-logger-for-sentry' ),
 			[ $this, 'field_blocklist' ],
 			self::PAGE_SLUG,
 			'wp_sentry_logger_noise'
@@ -129,7 +129,7 @@ final class SettingsPage {
 
 		add_settings_field(
 			'error_types',
-			__( 'Raw error mask (advanced)', 'wp-sentry-logger' ),
+			__( 'Raw error mask (advanced)', 'error-logger-for-sentry' ),
 			[ $this, 'field_error_types' ],
 			self::PAGE_SLUG,
 			'wp_sentry_logger_noise'
@@ -137,7 +137,7 @@ final class SettingsPage {
 
 		add_settings_field(
 			'privacy',
-			__( 'Privacy', 'wp-sentry-logger' ),
+			__( 'Privacy', 'error-logger-for-sentry' ),
 			[ $this, 'field_pii' ],
 			self::PAGE_SLUG,
 			'wp_sentry_logger_noise'
@@ -157,25 +157,25 @@ final class SettingsPage {
 		$config = $this->plugin->config();
 		?>
 		<div class="wrap">
-			<h1><?php esc_html_e( 'WP Sentry Logger', 'wp-sentry-logger' ); ?></h1>
+			<h1><?php esc_html_e( 'Error Logger for Sentry', 'error-logger-for-sentry' ); ?></h1>
 
 			<p>
 				<?php
 				if ( $config->is_active() ) {
 					printf(
 						/* translators: %s: DSN host name */
-						esc_html__( 'Active — sending error events to %s.', 'wp-sentry-logger' ),
+						esc_html__( 'Active — sending error events to %s.', 'error-logger-for-sentry' ),
 						'<code>' . esc_html( $this->dsn_host( $config->dsn ) ) . '</code>'
 					);
 				} else {
-					esc_html_e( 'Dormant — set a DSN below to start sending error events. Until then the plugin does nothing.', 'wp-sentry-logger' );
+					esc_html_e( 'Dormant — set a DSN below to start sending error events. Until then the plugin does nothing.', 'error-logger-for-sentry' );
 				}
 				?>
 			</p>
 
 			<p>
 				<a class="button button-secondary" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=wp_sentry_logger_test' ), 'wp_sentry_logger_test' ) ); ?>">
-					<?php esc_html_e( 'Send test event', 'wp-sentry-logger' ); ?>
+					<?php esc_html_e( 'Send test event', 'error-logger-for-sentry' ); ?>
 				</a>
 			</p>
 
@@ -206,10 +206,10 @@ final class SettingsPage {
 			<?php disabled( $locked ); ?>
 		/>
 		<p class="description">
-			<?php esc_html_e( 'Project DSN from your Sentry-compatible backend. Saved as https:// (plain http:// is upgraded automatically). Empty = plugin dormant.', 'wp-sentry-logger' ); ?>
+			<?php esc_html_e( 'Project DSN from your Sentry-compatible backend. Saved as https:// (plain http:// is upgraded automatically). Empty = plugin dormant.', 'error-logger-for-sentry' ); ?>
 			<?php
 			if ( $locked ) {
-				esc_html_e( ' Pinned by the WP_SENTRY_LOGGER_DSN constant in wp-config.php.', 'wp-sentry-logger' );
+				esc_html_e( ' Pinned by the WP_SENTRY_LOGGER_DSN constant in wp-config.php.', 'error-logger-for-sentry' );
 			}
 			?>
 		</p>
@@ -231,13 +231,13 @@ final class SettingsPage {
 				<?php checked( (bool) $settings['browser'] ); ?>
 				<?php disabled( $locked ); ?>
 			/>
-			<?php esc_html_e( 'Capture uncaught JavaScript errors from visitor browsers, relayed through a first-party endpoint on this site (no CORS or ad-blocker issues). Optional — leave off if you host browser monitoring separately. Uses the same DSN.', 'wp-sentry-logger' ); ?>
+			<?php esc_html_e( 'Capture uncaught JavaScript errors from visitor browsers, relayed through a first-party endpoint on this site (no CORS or ad-blocker issues). Optional — leave off if you host browser monitoring separately. Uses the same DSN.', 'error-logger-for-sentry' ); ?>
 		</label>
 		<?php
 		if ( $locked ) {
 			printf(
 				'<p class="description">%s</p>',
-				esc_html__( 'Pinned by the WP_SENTRY_LOGGER_BROWSER constant in wp-config.php.', 'wp-sentry-logger' )
+				esc_html__( 'Pinned by the WP_SENTRY_LOGGER_BROWSER constant in wp-config.php.', 'error-logger-for-sentry' )
 			);
 		}
 	}
@@ -251,9 +251,9 @@ final class SettingsPage {
 		$current  = (string) $settings['level'];
 
 		$labels = [
-			LevelPreset::Fatals->value     => __( 'Fatals only — crashes, parse and fatal errors', 'wp-sentry-logger' ),
-			LevelPreset::Default->value    => __( 'Default — fatals + warnings (recommended)', 'wp-sentry-logger' ),
-			LevelPreset::Everything->value => __( 'Everything — includes notices and deprecations (noisy!)', 'wp-sentry-logger' ),
+			LevelPreset::Fatals->value     => __( 'Fatals only — crashes, parse and fatal errors', 'error-logger-for-sentry' ),
+			LevelPreset::Default->value    => __( 'Default — fatals + warnings (recommended)', 'error-logger-for-sentry' ),
+			LevelPreset::Everything->value => __( 'Everything — includes notices and deprecations (noisy!)', 'error-logger-for-sentry' ),
 		];
 
 		foreach ( $labels as $value => $label ) {
@@ -274,7 +274,7 @@ final class SettingsPage {
 		if ( $locked ) {
 			printf(
 				'<p class="description">%s</p>',
-				esc_html__( 'Pinned by the WP_SENTRY_LOGGER_ERROR_TYPES / WP_SENTRY_LOGGER_LEVEL constant in wp-config.php.', 'wp-sentry-logger' )
+				esc_html__( 'Pinned by the WP_SENTRY_LOGGER_ERROR_TYPES / WP_SENTRY_LOGGER_LEVEL constant in wp-config.php.', 'error-logger-for-sentry' )
 			);
 		}
 	}
@@ -293,7 +293,7 @@ final class SettingsPage {
 			<?php disabled( $locked ); ?>
 		><?php echo esc_textarea( $locked ? '' : (string) $settings['blocklist'] ); ?></textarea>
 		<p class="description">
-			<?php esc_html_e( 'One regex per line (case-insensitive), matched against the error message, exception text and stack trace paths. Matching events are dropped. Lines starting with # are comments. Pinned by the WP_SENTRY_LOGGER_BLOCKLIST constant.', 'wp-sentry-logger' ); ?>
+			<?php esc_html_e( 'One regex per line (case-insensitive), matched against the error message, exception text and stack trace paths. Matching events are dropped. Lines starting with # are comments. Pinned by the WP_SENTRY_LOGGER_BLOCKLIST constant.', 'error-logger-for-sentry' ); ?>
 		</p>
 		<?php
 	}
@@ -314,7 +314,7 @@ final class SettingsPage {
 			<?php disabled( $locked ); ?>
 		/>
 		<p class="description">
-			<?php esc_html_e( 'PHP error_reporting-style mask overriding the severity preset. Leave empty to use the preset. Pinned by the WP_SENTRY_LOGGER_ERROR_TYPES constant.', 'wp-sentry-logger' ); ?>
+			<?php esc_html_e( 'PHP error_reporting-style mask overriding the severity preset. Leave empty to use the preset. Pinned by the WP_SENTRY_LOGGER_ERROR_TYPES constant.', 'error-logger-for-sentry' ); ?>
 		</p>
 		<?php
 	}
@@ -334,7 +334,7 @@ final class SettingsPage {
 				<?php checked( (bool) $settings['send_default_pii'] ); ?>
 				<?php disabled( $locked ); ?>
 			/>
-			<?php esc_html_e( 'Attach request bodies, IP address and cookies to events (not recommended for e-commerce sites; user e-mail/name are never sent either way).', 'wp-sentry-logger' ); ?>
+			<?php esc_html_e( 'Attach request bodies, IP address and cookies to events (not recommended for e-commerce sites; user e-mail/name are never sent either way).', 'error-logger-for-sentry' ); ?>
 		</label>
 		<?php
 	}
@@ -367,7 +367,7 @@ final class SettingsPage {
 					add_settings_error(
 						WP_SENTRY_LOGGER_OPTION,
 						'wp_sentry_logger_dsn',
-						__( 'Invalid DSN — the plugin stays dormant until it is fixed.', 'wp-sentry-logger' )
+						__( 'Invalid DSN — the plugin stays dormant until it is fixed.', 'error-logger-for-sentry' )
 					);
 					$clean['dsn'] = '';
 				}
@@ -391,7 +391,7 @@ final class SettingsPage {
 					'wp_sentry_logger_error_types',
 					sprintf(
 						/* translators: %d: example PHP error mask value. */
-						__( 'The error mask must be a number — e.g. %d for "everything except notices and deprecations". Non-numeric input was ignored.', 'wp-sentry-logger' ),
+						__( 'The error mask must be a number — e.g. %d for "everything except notices and deprecations". Non-numeric input was ignored.', 'error-logger-for-sentry' ),
 						( E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_USER_DEPRECATED )
 					)
 				);
@@ -411,7 +411,7 @@ final class SettingsPage {
 					'wp_sentry_logger_blocklist',
 					sprintf(
 						/* translators: %s: blocklist entry that is not a valid regex. */
-						__( 'Invalid blocklist regex, this line does nothing: %s', 'wp-sentry-logger' ),
+						__( 'Invalid blocklist regex, this line does nothing: %s', 'error-logger-for-sentry' ),
 						esc_html( $line )
 					)
 				);
@@ -436,7 +436,7 @@ final class SettingsPage {
 	 */
 	public function handle_test_event(): void {
 		if ( ! current_user_can( 'manage_options' ) || ! check_admin_referer( 'wp_sentry_logger_test' ) ) {
-			wp_die( esc_html__( 'Not allowed.', 'wp-sentry-logger' ) );
+			wp_die( esc_html__( 'Not allowed.', 'error-logger-for-sentry' ) );
 		}
 
 		$event_id = $this->plugin->send_test_event();

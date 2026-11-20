@@ -1,5 +1,5 @@
 {
-    "name": "lirrensi/wp-sentry-logger",
+    "name": "lirrensi/error-logger-for-sentry",
     "description": "WordPress error monitoring plugin for any Sentry-compatible backend (official sentry/sentry SDK)",
     "type": "wordpress-plugin",
     "license": "MIT",

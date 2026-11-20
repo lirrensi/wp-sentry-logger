@@ -46,7 +46,7 @@ final class Cli {
 		}
 
 		if ( ! $plugin->config()->is_active() ) {
-			\WP_CLI::error( 'No DSN configured — set it in Settings → WP Sentry Logger (or the WP_SENTRY_LOGGER_DSN constant).' );
+			\WP_CLI::error( 'No DSN configured — set it in Settings → Error Logger for Sentry (or the WP_SENTRY_LOGGER_DSN constant).' );
 		}
 
 		$event_id = $plugin->send_test_event();

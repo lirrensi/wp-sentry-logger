@@ -24,6 +24,7 @@ use function is_wp_error;
 use function plugins_url;
 use function register_rest_route;
 use function rest_url;
+use function sanitize_text_field;
 use function set_transient;
 use function sprintf;
 use function wp_add_inline_script;
@@ -32,6 +33,7 @@ use function wp_json_encode;
 use function wp_parse_url;
 use function wp_remote_post;
 use function wp_remote_retrieve_response_code;
+use function wp_unslash;
 
 /**
  * Browser SDK injection and the tunnel relay endpoint.
@@ -40,7 +42,7 @@ final class Browser {
 	/**
 	 * REST namespace of the tunnel endpoint.
 	 */
-	public const REST_NAMESPACE = 'wp-sentry-logger/v1';
+	public const REST_NAMESPACE = 'error-logger-for-sentry/v1';
 
 	/**
 	 * REST route of the tunnel endpoint.
@@ -50,7 +52,7 @@ final class Browser {
 	/**
 	 * Script handle of the injected browser bundle.
 	 */
-	private const SCRIPT_HANDLE = 'wp-sentry-logger-browser';
+	private const SCRIPT_HANDLE = 'error-logger-for-sentry-browser';
 
 	/**
 	 * Hard cap on a single relayed envelope, bytes. Real browser envelopes
@@ -110,9 +112,14 @@ final class Browser {
 	 * later scripts are captured.
 	 */
 	public function enqueue(): void {
+		// WordPress.org requires human-readable source alongside any minified
+		// file. Serve the unminified build when SCRIPT_DEBUG is on so the
+		// source in assets/ is exercised, not just stored.
+		$suffix = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
+
 		wp_enqueue_script(
 			self::SCRIPT_HANDLE,
-			plugins_url( 'assets/sentry-browser.min.js', WP_SENTRY_LOGGER_PLUGIN_FILE ),
+			plugins_url( 'assets/sentry-browser' . $suffix . '.js', WP_SENTRY_LOGGER_PLUGIN_FILE ),
 			[],
 			WP_SENTRY_LOGGER_VERSION,
 			false
@@ -237,7 +244,11 @@ final class Browser {
 	 * Transient-based per-IP limiter; keeps spam out of the tracker.
 	 */
 	private function is_rate_limited(): bool {
-		$key  = 'wp_sentry_logger_tunnel_' . substr( hash( 'sha256', (string) ( $_SERVER['REMOTE_ADDR'] ?? '' ) ), 0, 32 );
+		$remote_addr = isset( $_SERVER['REMOTE_ADDR'] )
+			? sanitize_text_field( wp_unslash( (string) $_SERVER['REMOTE_ADDR'] ) )
+			: '';
+
+		$key  = 'wp_sentry_logger_tunnel_' . substr( hash( 'sha256', $remote_addr ), 0, 32 );
 		$hits = (int) get_transient( $key );
 
 		if ( $hits >= self::RATE_LIMIT_MAX ) {

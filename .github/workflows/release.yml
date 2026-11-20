@@ -20,12 +20,12 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: curl
+          extensions: curl, zip
 
       - name: Verify tag matches plugin version
         run: |
           tag="${GITHUB_REF_NAME#v}"
-          file=$(php -r '$s = file_get_contents( "wp-sentry-logger.php" ); preg_match( "/WP_SENTRY_LOGGER_VERSION\s+=\s+\x27([^\x27]+)\x27/", $s, $m ); echo $m[1] ?? "";')
+          file=$(php -r '$s = file_get_contents( "error-logger-for-sentry.php" ); preg_match( "/WP_SENTRY_LOGGER_VERSION\s+=\s+\x27([^\x27]+)\x27/", $s, $m ); echo $m[1] ?? "";')
           if [ "$tag" != "$file" ]; then
             echo "::error::tag v$tag does not match plugin version '$file' — release from a bumped commit (bin/release.sh)."
             exit 1
@@ -35,12 +35,12 @@ jobs:
         run: |
           version="${GITHUB_REF_NAME#v}"
           bash bin/build.sh "$version"
-          php -r '$z = new ZipArchive(); $z->open( $argv[1] ); exit( $z->locateName( "wp-sentry-logger/wp-sentry-logger.php" ) === false ? 1 : 0 );' "wp-sentry-logger-${version}.zip"
+          php -r '$z = new ZipArchive(); $z->open( $argv[1] ); exit( $z->locateName( "error-logger-for-sentry/error-logger-for-sentry.php" ) === false ? 1 : 0 );' "error-logger-for-sentry-${version}.zip"
 
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 \
-            || gh release create "$GITHUB_REF_NAME" --title "WP Sentry Logger ${GITHUB_REF_NAME#v}" --generate-notes
-          gh release upload "$GITHUB_REF_NAME" wp-sentry-logger-*.zip --clobber
+            || gh release create "$GITHUB_REF_NAME" --title "Error Logger for Sentry ${GITHUB_REF_NAME#v}" --generate-notes
+          gh release upload "$GITHUB_REF_NAME" error-logger-for-sentry-*.zip --clobber

@@ -1,4 +1,4 @@
-# WP Sentry Logger
+# Error Logger for Sentry
 
 Error monitoring for WordPress via the **official Sentry PHP SDK** (`sentry/sentry` 4.x).
 Works with any Sentry-compatible backend. Protocol and transport are upstream;
@@ -21,7 +21,7 @@ not in this plugin.
 - DSN scheme engineering guard: DSN is forced onto `https://` even when the backend hands out a plain-`http://` DSN (the SDK won't follow HTTP→HTTPS redirects and would silently eat every event otherwise).
 - URL querystrings, request bodies, cookies, auth headers, and server environment stripped before send (`send_default_pii` off by default).
 - WordPress context tags: WP version, plugin version, theme, environment, blog id, WooCommerce version when present; user id and role only (never e-mail / display name / IP).
-- Settings UI: Settings -> WP Sentry Logger (Settings API, one option row, capability `manage_options`).
+- Settings UI: Settings -> Error Logger for Sentry (Settings API, one option row, capability `manage_options`).
 - WP-CLI: `wp sentry-logger test`.
 - Optional **browser (JavaScript) capture**: bundles the official Sentry Browser SDK (no third-party requests) and relays page errors through a first-party tunnel endpoint on this site — no CORS, no ad-blocker blocking. Off by default; skip it if you host browser monitoring separately.
 - Missing `vendor/` degrades to an admin notice — not a white screen.
@@ -68,7 +68,7 @@ Optional, off by default. When enabled, the plugin drops the official Sentry Bro
 ```
 visitor browser                   your WordPress site                       your tracker
 ───────────────                   ───────────────────                       ────────────
-Sentry Browser SDK   ── POST ──►  /wp-json/wp-sentry-logger/v1/tunnel  ──►  /api/<project>/envelope/
+Sentry Browser SDK   ── POST ──►  /wp-json/error-logger-for-sentry/v1/tunnel  ──►  /api/<project>/envelope/
 bundled locally,                  size cap · per-IP rate limit
 same-origin, no CDN               DSN allowlist (yours only)
 ```
@@ -87,7 +87,7 @@ same-origin, no CDN               DSN allowlist (yours only)
 
 ### Enabling it
 
-- Settings → WP Sentry Logger → *Browser errors (optional)*, or
+- Settings → Error Logger for Sentry → *Browser errors (optional)*, or
 - `define( 'WP_SENTRY_LOGGER_BROWSER', true );` in `wp-config.php` — one line in the deploy template for a whole fleet.
 
 Off means off: no script, no endpoint, no hooks. Sites that host browser monitoring separately (another plugin, a tag manager, a hand-rolled snippet) remain untouched.
@@ -129,12 +129,12 @@ if ( window.Sentry ) {
 }
 ```
 
-From PHP, attach inline JS to the `wp-sentry-logger-browser` script handle so ordering is guaranteed (it prints only while browser coverage is on):
+From PHP, attach inline JS to the `error-logger-for-sentry-browser` script handle so ordering is guaranteed (it prints only while browser coverage is on):
 
 ```php
 add_action( 'wp_enqueue_scripts', function (): void {
 	wp_add_inline_script(
-		'wp-sentry-logger-browser',
+		'error-logger-for-sentry-browser',
 		"Sentry.captureMessage( 'Deploy marker: theme v4.2' );",
 		'after'
 	);
@@ -174,7 +174,7 @@ This plugin forks [CodingIT-dev/wp-sentry](https://github.com/CodingIT-dev/wp-se
 
 That fork is itself based on [stayallive/wp-sentry](https://github.com/stayallive/wp-sentry) — the original unofficial WordPress → Sentry plugin by Alex Bouma (MIT). Thanks to both projects for the work this stands on.
 
-Browser coverage bundles the official [Sentry Browser SDK](https://github.com/getsentry/sentry-javascript) (`assets/sentry-browser.min.js`, MIT, © Sentry).
+Browser coverage bundles the official [Sentry Browser SDK](https://github.com/getsentry/sentry-javascript) (`assets/sentry-browser.min.js`, plus the unminified `assets/sentry-browser.js` source used when `SCRIPT_DEBUG` is on; MIT, © Sentry).
 
 ## License
 

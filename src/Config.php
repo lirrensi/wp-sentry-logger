@@ -1,6 +1,6 @@
 <?php
 /**
- * Immutable runtime configuration for WP Sentry Logger.
+ * Immutable runtime configuration for Error Logger for Sentry.
  *
  * Resolution order for every value: PHP constant (wp-config.php) → saved
  * option → built-in default. Constants exist so a site owner can pin a
@@ -12,6 +12,8 @@
 declare(strict_types=1);
 
 namespace WPSentryLogger;
+
+use function wp_parse_url;
 
 /**
  * Severity presets. The names double as values of the `level` setting.
@@ -220,7 +222,7 @@ final class Config {
 	 * Scheme of an arbitrary DSN string, null when unparsable.
 	 */
 	private static function dsn_scheme( string $dsn ): ?string {
-		$parsed = parse_url( $dsn );
+		$parsed = wp_parse_url( $dsn );
 
 		return is_array( $parsed ) && isset( $parsed['scheme'] ) ? (string) $parsed['scheme'] : null;
 	}
@@ -238,7 +240,7 @@ final class Config {
 			return $dsn;
 		}
 
-		$parsed = parse_url( $dsn );
+		$parsed = wp_parse_url( $dsn );
 
 		if ( ! is_array( $parsed ) || ! isset( $parsed['scheme'], $parsed['host'] ) ) {
 			return $dsn;

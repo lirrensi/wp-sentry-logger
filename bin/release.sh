@@ -34,9 +34,9 @@ git pull --ff-only
 
 php bin/bump-version.php "$version"
 
-git add wp-sentry-logger.php
+git add error-logger-for-sentry.php readme.txt
 git commit -m "Release v$version"
-git tag -a "v$version" -m "WP Sentry Logger $version"
+git tag -a "v$version" -m "Error Logger for Sentry $version"
 git push
 git push origin "v$version"
 

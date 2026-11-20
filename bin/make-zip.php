@@ -4,7 +4,7 @@
  */
 declare(strict_types=1);
 
-$dst  = $argv[1] ?? 'wp-sentry-logger-local.zip';
+$dst  = $argv[1] ?? 'error-logger-for-sentry-local.zip';
 $zip  = new ZipArchive();
 
 if ( $zip->open( $dst, ZipArchive::CREATE | ZipArchive::OVERWRITE ) !== true ) {
@@ -16,8 +16,8 @@ $root = getcwd();
 
 // WordPress treats an archive with a single top-level folder as the plugin
 // folder. Wrapping under the slug gives every install (and every update) the
-// same deterministic path: wp-content/plugins/wp-sentry-logger/.
-$slug = 'wp-sentry-logger';
+// same deterministic path: wp-content/plugins/error-logger-for-sentry/.
+$slug = 'error-logger-for-sentry';
 
 $it   = new RecursiveIteratorIterator(
 	new RecursiveDirectoryIterator( $root, FilesystemIterator::SKIP_DOTS )
