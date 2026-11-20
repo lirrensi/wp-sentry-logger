@@ -5,7 +5,9 @@
  * Version:           1.1.0
  * Requires at least: 6.4
  * Requires PHP:      8.2
- * Author:            Kiber Integration
+ * Author:            lirrensi
+ * Author URI:        https://github.com/lirrensi
+ * Plugin URI:        https://github.com/lirrensi/wp-sentry-logger
  * License:           MIT
  * License URI:       https://opensource.org/license/mit
  * Text Domain:       wp-sentry-logger

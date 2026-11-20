@@ -1,8 +1,19 @@
 {
-    "name": "kiber-int/wp-sentry-logger",
+    "name": "lirrensi/wp-sentry-logger",
     "description": "WordPress error monitoring plugin for any Sentry-compatible backend (official sentry/sentry SDK)",
     "type": "wordpress-plugin",
     "license": "MIT",
+    "authors": [
+        {
+            "name": "lirrensi",
+            "homepage": "https://github.com/lirrensi"
+        }
+    ],
+    "homepage": "https://github.com/lirrensi/wp-sentry-logger",
+    "support": {
+        "source": "https://github.com/lirrensi/wp-sentry-logger",
+        "issues": "https://github.com/lirrensi/wp-sentry-logger/issues"
+    },
     "require": {
         "php": ">=8.2",
         "sentry/sentry": "^4.14"
